@@ -1,0 +1,68 @@
+Automating Crossout PvE:
+
+one-shot yolo: entity sign detection (unique red, purple, yellow, blue indicators)
+crop: weapon signs and ammo counts, minimap, tabbed map
+color filters, scipy, mapping trees?: map, minimap-entity distance-estimation
+one-shot + text crop: weapon signs and ammo counts
+one-shot yolo and custom affine image transform pretraining?: local entity distance/orientation
+fsm/pytrees: movement and shooting behaviors
+
+controls: pydirectinput + pyautogui
+pausing pyautogui: https://stackoverflow.com/questions/65068775/how-to-stop-or-pause-pyautogui-at-any-moment-that-i-want
+
+How to do a multiprocessed live convolution+mapping trees?
+color count: https://stackoverflow.com/questions/69932895/count-total-number-of-pixels-for-each-color
+https://github.com/aosokin/os2d?tab=readme-ov-file
+
+cloaked/covered units and psuedo object persistance? 
+
+Controls: wasd, lclick, rclick, mouse4(thumb), 1, 2, r, mouse xy
+press, release-> abstract into click, doubleclick, hold, release
+
+Image to Text: pytesseract or https://huggingface.co/tasks/image-to-text, take cropped negatives since text is white?
+
+Search Engine's Best One-shot Rec?: https://github.com/timy90022/One-Shot-Object-Detection?tab=readme-ov-file
+
+Todos:
+Test Copypasta in Environment
+Avoid Using Premade NN libs, idk how cuda/c++ holds up in this env, would have to use wsl... which can't use gpu
+Divide/Grid Image->BoundingBox Interpolation/Estimation
+Vanishing Point? Do a low res ScreenCap? Sobel Filter? -> Linear Interpolation of subgrids -> Horizon Lines
+
+Changes/Tests for CP Bounding Box:
+replace model_path and self.model with a function taking input_tensor and outputting feature maps
+feature_maps is a torch.Tensor that indexes by batch_idxc containing feature
+
+replace # Run inference, # Get boxes, scores, and class ids
+
+? take base image, cut into parts, check if parts match via some heuristic?
+heuristic being color count matching on pixels, 
+so just do another subdivision and check again by ratios
+there's not that many highly detailed shapes for this task
+filter out by color count on subdivisions
+interpolate anchor boxes by differences in color count?
+
+is it batch per grid offset?
+
+Consider implementing custom version of py_trees, 
+high probablity of 3rd party asshole messing with downloaded version or environment functionality
+For dl ed version of py_trees:
+multiprocessing : utilies.py Process.. not used ever?
+theading: action.py planning -> used to simulate long running external processes..? for their testing?
+signal: tree.py heavy usage, but otherwise naw
+
+signal.valid_signals()
+{<Signals.SIGINT: 2>, <Signals.SIGILL: 4>, <Signals.SIGFPE: 8>, <Signals.SIGSEGV: 11>, 
+<Signals.SIGTERM: 15>, <Signals.SIGBREAK: 21>, <Signals.SIGABRT: 22>} 
+
+note that tree.py has insert_subtree and prune_subtree, 
+which is likely a core factor in having a reasonable runtime
+
+FSM/BehaviourTree: 
+Main = Parallel(UpdateMapping, UpdateObjectTracking, UpdateControls)
+UpdateMapping = Selector(LargeMapUpdate, MiniMapUpdate)
+UpdateObjectTracking = Sequence(UpdateEntityDetection, UpdateObstacleDetection)
+UpdateControls = Parallel(UpdateCameraTrackingInfo, MoveCamera, UpdateMovement, HandleShooting, HandlePrompt)
+
+Most Todos in: 
+Controls, Mapping, Navigation, Perspectives, Planning

@@ -1,0 +1,13 @@
+# https://claude.ai/chat/30b0e915-39b7-4c49-81b4-d453b52c37b2
+
+# Load your images
+img1 = cv2.imread('frame1.jpg')
+img2 = cv2.imread('frame2.jpg')
+
+# Track motion
+dx, dy = track_motion(img1, img2)
+print(f"Detected motion: dx={dx:.2f}, dy={dy:.2f} pixels")
+
+# To track specific region
+roi = (100, 100, 200, 200)  # x, y, width, height
+dx, dy = track_motion(img1, img2, roi=roi)
