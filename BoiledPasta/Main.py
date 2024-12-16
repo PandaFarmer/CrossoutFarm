@@ -3,11 +3,8 @@ import pynput
 from pynput import keyboard
 from threading import Thread
 import time
-import py_trees
-from py_trees.composites import Sequence, Selector, Parallel
-from py_trees.behaviour import Behaviour
+from NodeTrees import *
 import cv2
-from Logger import Logger
 import sys
 from Utilities import AttrDict
 
@@ -46,19 +43,7 @@ class MainStatus(Behaviour):
         
     def update(self):
         self.logger.info(f"module: {self.module_name} update...{self.name}")
-        return py_trees.common.Status.RUNNING
-        
-    def setup(self):
-        self.logger.info(f"module: {self.module_name} setup...{self.name}")
-        
-    def initialize(self):
-        self.logger.info(f"module: {self.module_name} initialize...{self.name}")
-        
-    def update(self):
-        self.logger.info(f"module: {self.module_name} update...{self.name}")
-        
-    def terminate(self):
-        self.logger.info(f"module: {self.module_name} terminate...{self.name}")
+        return NodeStatus.RUNNING
         
 class MainLoop(Behaviour):
     def __init__(self, name, blackboard):

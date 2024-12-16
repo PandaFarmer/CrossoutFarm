@@ -3,150 +3,65 @@ from Utilities import Singleton
 import logging
 from enum import Enum
 from typing import LiteralString
+import traceback
 
+
+logging_filepath = "/logging/log.log"
+logger = logging.getLogger(__name__)
+# https://stackoverflow.com/questions/11581794/how-do-i-change-the-format-of-a-python-log-message-on-a-per-logger-basis
+logger.setLevel(logging.DEBUG)
+# create file handler that logs debug and higher level messages
+fh = logging.FileHandler('/logging/spam.log')
+fh.setLevel(logging.DEBUG)
+# create console handler with a higher log level
+ch = logging.StreamHandler()
+ch.setLevel(logging.ERROR)
+# create formatter and add it to the handlers
+# formatter = logging.Formatter(
+#     '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 
-# levels = {"NOTSET":logging.NOTSET,
-#     "DEBUG":logging.DEBUG,
-#     "INFO":logging.INFO,
-#     "WARNING":logging.WARNING,
-#     "ERROR":logging.ERROR,
-#     "CRITICAL":logging.CRITICAL}
-
-
-class logging_level(Enum):
-    NOTSET = 0
-    DEBUG = 1
-    INFO = 2
-    WARNING = 3
-    ERROR = 4
-    CRITICAL = 5
+ch.setFormatter(formatter)
+fh.setFormatter(formatter)
+# add the handlers to logger
+logger.addHandler(ch)
+logger.addHandler(fh)
 
 class Logger(metaclass=Singleton):
     
-    def __init__(self, module_name:str, shared_logging:bool, logging_level):
+    def __init__(self, logging_level=logging.NOTSET):
+        logging.basicConfig(filename=logging_filepath, level=logging.INFO)
         
-        # if not logging_level in levels.keys():
-        #     raise ValueError("Valid log levels entered as string are NOTSET, DEBUG, INFO, WARNING, ERROR, CRITICAL")
         
-        if not hasattr(self, 'logging_level'):
-            self.module_info = dict()
-            
-        # new_logger = self.setup_logger(module_name, f'Logging/{module_name}.log', level=logging_level)
-        self.module_info[module_name] = {'shared_logging':shared_logging, 'logging_level':logging_level, 'filepath':f'Logging/{module_name}.log'}
-                                        #  'logger':new_logger}
+    def module_from_traceback(self):
+        tb_stack = traceback.format_stack(limit = 2)
+        rv = tb_stack[0].split(',')[0].split()[1].strip('"')
+        assert('<' in rv and '>' in rv)
+        return rv
         
-        self.clear_starting_logs = True
-            
-        if hasattr(self, 'logging'):
-            pass
-        else:
-            self.shared_log_filepath = 'Logging/shared_logging.log'
-            self.logging = self.setup_logger("shared_logging", self.shared_log_filepath, level=logging_level)
-        
-        if self.clear_starting_logs:
-            for module_name in self.module_info.keys():
-                open(f'Logging/{module_name}.log', 'w').close()
-            open(self.shared_log_filepath, 'w').close()
-                   
-    def setup_logger(self, module_name:str, filename:str, level=logging_level.INFO):
-        if not self.logging_info:
-            self.logging_info = {}
-        self.logging_info[module_name] = {'filename':filename, 'level':level}
-        
-    def log_to_file(self, filepath, msg):
-        with open(filepath, 'a') as f:
-            f.writelines
-        
-    def notset(self, module_name:str, msg:str):
-        if self.module_info[module_name] > logging_level.NOTSET:
-            return
-        if module_name in self.module_names_with_shared_logging:
-            self.log_to_file(self.shared_log_filepath, module_name + "::" + msg)
-        filepath = self.module_info[module_name]['filepath']
-        self.log_to_file(filepath, msg) 
+    def info(self):
+        module = self.module_from_traceback()
     
-    def debug(self, module_name:str, msg:str):
-        if self.module_info[module_name] > logging_level.DEBUG:
-            return
-        if module_name in self.module_names_with_shared_logging:
-            self.log_to_file(self.shared_log_filepath, module_name + "::" + msg)
-        filepath = self.module_info[module_name]['filepath']
-        self.log_to_file(filepath, msg)
-        
-    def info(self, module_name:str, msg:str):
-        if self.module_info[module_name] > logging_level.INFO:
-            return
-        if module_name in self.module_names_with_shared_logging:
-            self.log_to_file(self.shared_log_filepath, module_name + "::" + msg)
-        filepath = self.module_info[module_name]['filepath']
-        self.log_to_file(filepath, msg)
-        
-    def warning(self, module_name:str, msg:str):
-        if self.module_info[module_name] > logging_level.WARNING:
-            return
-        if module_name in self.module_names_with_shared_logging:
-            self.log_to_file(self.shared_log_filepath, module_name + "::" + msg)
-        filepath = self.module_info[module_name]['filepath']
-        self.log_to_file(filepath, msg)
-        
-    def error(self, module_name:str, msg:str):
-        if self.module_info[module_name] > logging_level.ERROR:
-            return
-        if module_name in self.module_names_with_shared_logging:
-            self.log_to_file(self.shared_log_filepath, module_name + "::" + msg)
-        filepath = self.module_info[module_name]['filepath']
-        self.log_to_file(filepath, msg)
-    
-    def critical(self, module_name:str, msg:str):
-        if self.module_info[module_name] > logging_level.CRITICAL:
-            return
-        if module_name in self.module_names_with_shared_logging:
-            self.log_to_file(self.shared_log_filepath, module_name + "::" + msg)
-        filepath = self.module_info[module_name]['filepath']
-        self.log_to_file(filepath, msg)
-           
-    # https://stackoverflow.com/questions/11232230/logging-to-two-files-with-different-settings#11233293 
-    # def setup_logger(self, module_name:str, filename:str, level=logging.INFO):
-    #     """To setup as many loggers as you want"""
+    def notset(self, msg):
+        module = self.module_from_traceback()
+        logging.notset(f"{module} :: {msg}")
 
-    #     handler = logging.FileHandler(filename)        
-    #     handler.setFormatter(formatter)
+    def debug(self, msg):
+        module = self.module_from_traceback()
+        logging.debug(f"{module} :: {msg}")
 
-    #     logger = logging.getLogger(module_name)
-    #     logger.setLevel(level)
-    #     logger.addHandler(handler)
+    def info(self, msg):
+        module = self.module_from_traceback()
+        logging.info(f"{module} :: {msg}")
 
-    #     return logger
-            
-    # def notset(self, module_name:str, msg:str):
-    #     if module_name in self.module_names_with_shared_logging:
-    #         self.logging.notset(module_name + "::" + msg)
-    #     self.loggers[module_name].notset(msg) 
-    
-    # def debug(self, module_name:str, msg:str):
-    #     if module_name in self.module_names_with_shared_logging:
-    #         self.logging.debug(module_name + "::" + msg)
-    #     self.loggers[module_name].debug(msg)
-        
-    # def info(self, module_name:str, msg:str):
-    #     if module_name in self.module_names_with_shared_logging:
-    #         self.logging.info(module_name + "::" + msg)
-    #     self.loggers[module_name].info(msg)
-        
-    # def warning(self, module_name:str, msg:str):
-    #     if module_name in self.module_names_with_shared_logging:
-    #         self.logging.warning(module_name + "::" + msg)
-    #     self.loggers[module_name].warning(msg)
-        
-    # def error(self, module_name:str, msg:str):
-    #     if module_name in self.module_names_with_shared_logging:
-    #         self.logging.error(module_name + "::" + msg)
-    #     self.loggers[module_name].error(msg)
-    
-    # def critical(self, module_name:str, msg:str):
-    #     if module_name in self.module_names_with_shared_logging:
-    #         self.logging.critical(module_name + "::" + msg)
-    #     self.loggers[module_name].critical(msg)
-    
+    def warning(self, msg):
+        module = self.module_from_traceback()
+        logging.warning(f"{module} :: {msg}")
 
+    def error(self, msg):
+        module = self.module_from_traceback()
+        logging.error(f"{module} :: {msg}")
+
+    def critical(self, msg):
+        module = self.module_from_traceback()
+        logging.critical(f"{module} :: {msg}")
