@@ -7,6 +7,7 @@ from NodeTrees import *
 import cv2
 import sys
 from Utilities import AttrDict
+from Logger import Logger
 
 # https://stackoverflow.com/questions/24072790/how-to-detect-key-presses
 # https://stackoverflow.com/questions/11918999/key-listeners-in-python
@@ -15,102 +16,71 @@ from Utilities import AttrDict
 # from pynput.keyboard import Controller, Key, Listener
 # from pynput.mouse import Button, Controller
 
+logger = Logger("INFO")
+bb_ = AttrDict({'main_status':"running"}) #blackboard
 
-bb_ = AttrDict({'main_status':"pause"}) #blackboard
-   
-class MainStatus(Behaviour):
-    def __init__(self, name, bb_):
-        super(MainStatus, self).__init__(name)
-        self.bb_ = bb_
-        self.listener = keyboard.Listener(on_press=self.on_press)
-        self.listener.start()
-        self.listener.join()
-        self.module_name = "MainStatus"
-        self.logger = Logger(module_name=self.module_name, shared_logging =True, logging_level="INFO")
-        
-    def on_press(self, key):
-        self.logger.info(msg=f"{key} pressed")
-        print('{0} pressed'.format(
-            key))
-        if key == keyboard.Key.ctrl_r:
-            if self.bb_.main_status == 'pause':
-                self.bb_.main_status = 'run'
-            else:
-                self.bb_.main_status = 'pause'
-        if key == keyboard.Key.esc:
-            self.bb_.main_status = 'exit'
-            sys.exit()
-        
-    def update(self):
-        self.logger.info(f"module: {self.module_name} update...{self.name}")
-        return NodeStatus.RUNNING
-        
-class MainLoop(Behaviour):
-    def __init__(self, name, blackboard):
-        super(MainLoop, self).__init__(name)
-        self.blackboard = blackboard
-        # self.listener = keyboard.Listener(on_press=self.on_press)
-        # self.listener.start()
-        # self.listener.join()
-        self.module_name = "MainLoop"
-        self.logger = Logger(module_name=self.module_name, shared_logging =True, logging_level="INFO")
-        
-    def update(self):
-        self.logger.info(self.module_name, f"update...{self.name}")
-        print(f"main_status: {bb_.main_status}")
-
+def on_press(key):
+    logger.info(msg=f"{key} pressed")
+    print(f"{key} pressed")
+    
+    if key == keyboard.Key.ctrl_r:
+        logger.info("")
         if bb_.main_status == 'pause':
-            time.sleep(1)
+            bb_.main_status = 'run'
+        else:
+            bb_.main_status = 'pause'
+    if key == keyboard.Key.esc:
+        bb_.main_status = 'exit'
+        sys.exit()
 
-        if bb_.main_status == 'exit':
-            print('MainLoop closing')
-            cv2.destroyAllWindows()
-            self.terminate()
-            sys.exit()
-        return py_trees.common.Status.RUNNING
-        
-    def setup(self):
-        self.logger.info(self.module_name, f"setup...{self.name}")
-        
-    def initialize(self):
-        self.logger.info(self.module_name, f"initialize...{self.name}")
-        
-    def update(self):
-        self.logger.info(self.module_name, f"update...{self.name}")
-        
-    def terminate(self):
-        self.logger.info(self.module_name, f"terminate...{self.name}")
+def main_status(description):   
+    return NodeStatus.RUNNING
+      
+
+def main_loop(description):
+    listener = keyboard.Listener(on_press=on_press)
+    listener.start()
+    listener.join()
+    print(f"main_status: {bb_.main_status}\ndescription:{description}")
+    logger.debug(f"main_status: {bb_.main_status}\ndescription:{description}")
+
+    if bb_.main_status == 'pause':
+        time.sleep(1)
+
+    if bb_.main_status == 'exit':
+        print('MainLoop closing')
+        cv2.destroyAllWindows()
+        sys.exit()
+    return NodeStatus.RUNNING
     
 if __name__ == "__main__":
     # tree = Sequence("Main", children = [
-    #     Parallel("MainControls", children = [
-    #         Selector("UpdateMapping", children = [
-    #             LargeMapUpdate(), 
-    #             MiniMapUpdate()
+    #     Parallel("main_controls", children = [
+    #         Selector("update_mapping", children = [
+    #             large_map_update(), 
+    #             mini_map_update()
     #         ]),
-    #         Sequence("UpdateObjectTracking", children = [
-    #             UpdateEntityDetection(),
-    #             UpdateObstacleDetection()
+    #         Sequence("update_object_tracking", children = [
+    #             update_entity_detection(),
+    #             update_obstacle_detection()
     #         ]),
-    #         Parallel("UpdateControls", children = [
-    #             UpdateCameraTrackingInfo(),
-    #             MoveCamera(),
-    #             UpdateMovement(),
-    #             HandleShooting(),
-    #             HandlePrompt()
+    #         Parallel("update_controls", children = [
+    #             update_camera_tracking_info(),
+    #             move_camera(),
+    #             update_movement(),
+    #             handle_shooting(),
+    #             handle_prompt()
     #         ])
     #     ])
     # ], memory=True)
     
-    # tree = Parallel("Main", children = [
-    #     main
-    # ])
-    tree = Parallel("Main", policy=py_trees.common.ParallelPolicy.SuccessOnAll(), children = [
-        MainStatus("Listen For Keyboard Prompt Status Updates", bb_), 
-        MainLoop("Iterating through program functions", bb_)])
+
+    tree = Parallel(description="Main", children = [
+        main_status("Listen For Keyboard Prompt Status Updates"), 
+        main_loop("Iterating through program functions")])
     
     while True:
-        tree.tick_once()
+        tree.tick()
     
     # main_status = 'run'
     
