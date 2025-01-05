@@ -9,6 +9,8 @@ import sys
 from Utilities import AttrDict
 from Logger import Logger
 
+import platform
+
 # https://stackoverflow.com/questions/24072790/how-to-detect-key-presses
 # https://stackoverflow.com/questions/11918999/key-listeners-in-python
 # https://stackoverflow.com/questions/65068775/how-to-stop-or-pause-pyautogui-at-any-moment-that-i-want
@@ -74,6 +76,10 @@ if __name__ == "__main__":
     #     ])
     # ], memory=True)
     
+    if platform.system() == 'Darwin':
+        logger.info("Macbook found, setting to test mode only")
+        ParallelTest
+        return
 
     tree = Parallel(description="Main", children = [
         main_status("Listen For Keyboard Prompt Status Updates"), 

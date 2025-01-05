@@ -1,0 +1,7 @@
+mss
+numpy
+pillow
+pynput
+scikit-learn
+scikit-image
+opencv-python

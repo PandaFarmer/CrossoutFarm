@@ -40,8 +40,12 @@ with open(spam_filepath, 'w') as f:
 class Logger(metaclass=Singleton):
     
     def __init__(self, logging_level:str):
-        FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        FORMAT = '%(asctime)s - %(threadName)s - %(levelname)s - %(message)s'
         logging.basicConfig(format=FORMAT, filename=logging_filepath, level=logging_map[logging_level])
+        handler = logging.handlers.RotatingFileHandler(
+            log_file, maxBytes=5*1024*1024, backupCount=3
+            )
+        logger.addHandler(handler)
         
     def module_from_traceback(self):
         tb_stack = traceback.format_stack(limit = 3)
